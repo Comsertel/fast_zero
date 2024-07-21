@@ -30,8 +30,6 @@ def test_read_users_empty(client):
 def test_read_users_with_users(client, user):
     user_schema = UserPublic.model_validate(user).model_dump()
     response = client.get('/users/')
-    print(42)
-    print(response.json())
     assert response.json() == {'users': [user_schema]}
 
 
@@ -65,6 +63,19 @@ def test_update_user(client, user, token):
     }
 
 
+def test_update_user_with_wrong_user(client, other_user, token):
+    response = client.put(
+        f'/users/{other_user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+        json={
+            'username': 'bob',
+            'email': 'bob@example.com',
+            'password': 'mynewpassword',
+        },
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
 def test_update_user_not_found(client, user, token):
     response = client.put(
         '/users/100',
@@ -95,9 +106,9 @@ def test_delete_user_not_found(client, token):
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_delete_wrong_user(client, user, token):
+def test_delete_wrong_user(client, other_user, token):
     response = client.delete(
-        f'/users/{user.id + 1}',
+        f'/users/{other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
     assert response.status_code  # == HTTPStatus.FORBIDDEN
