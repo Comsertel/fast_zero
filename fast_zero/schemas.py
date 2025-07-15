@@ -26,3 +26,8 @@ class UserDB(UserSchema):
 class UserList(BaseModel):
     users: list[UserPublic]
     size: int
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
