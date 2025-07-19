@@ -16,7 +16,7 @@ def test_jwt():
 
 def test_jwt_invalid_token(client):
     response = client.delete(
-        '/user/1', headers={'Authorization': 'Bearer token-legitimo-confia'}
+        '/users/1', headers={'Authorization': 'Bearer token-legitimo-confia'}
     )
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED
