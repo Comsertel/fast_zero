@@ -1,14 +1,20 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from fast_zero.database import get_session
 from fast_zero.models import User
-from fast_zero.schemas import Message, UserList, UserPublic, UserSchema
+from fast_zero.schemas import (
+    FilterPage,
+    Message,
+    UserList,
+    UserPublic,
+    UserSchema,
+)
 from fast_zero.security import (
     get_current_user,
     get_password_hash,
@@ -18,6 +24,7 @@ router = APIRouter(prefix='/users', tags=['users'])
 
 T_Session = Annotated[Session, Depends(get_session)]
 T_CurrentUser = Annotated[User, Depends(get_current_user)]
+T_filterPage = Annotated[FilterPage, Query()]
 
 
 @router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
@@ -61,18 +68,17 @@ def get_user(user_id: int, session: T_Session):
 
 @router.get('/', status_code=HTTPStatus.OK, response_model=UserList)
 def get_users(
-    session: T_Session,
-    current_user: T_CurrentUser,
-    limit: int = 10,
-    offset: int = 0,
+    session: T_Session, current_user: T_CurrentUser, filter_users: T_filterPage
 ):
-    db_users = session.scalars(select(User).limit(limit).offset(offset)).all()
+    db_users = session.scalars(
+        select(User).limit(filter_users.limit).offset(filter_users.offset)
+    ).all()
 
     return {
         'users': db_users,
         'size': len(db_users),
-        limit: limit,
-        'offset': offset,
+        'limit': filter_users.limit,
+        'offset': filter_users.offset,
     }
 
 
