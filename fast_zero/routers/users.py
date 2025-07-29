@@ -126,6 +126,6 @@ async def delete_user(
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
-    session.delete(db_user)
+    await session.delete(db_user)
     await session.commit()
     return {'message': 'User deleted'}
