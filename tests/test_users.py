@@ -13,6 +13,7 @@ def test_create_user_deve_retornar_usuario_criado(client):
 
     del user_data['password']
     user_data['id'] = 1
+    # user_data['todos'] = []
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == user_data
