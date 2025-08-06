@@ -64,7 +64,8 @@ async def list_todos(
         query.offset(todo_filter.offset).limit(todo_filter.limit)
     )
 
-    return {'todos': todos.all()}
+    todos = todos.all()
+    return {'todos': todos, 'size': len(todos)}
 
 
 @router.delete('/{todo_id}', status_code=HTTPStatus.OK, response_model=Message)

@@ -17,13 +17,16 @@ class TodoFactory(factory.Factory):
     user_id = 1
 
 
-def test_create_todo(client, token):
+@pytest.mark.asyncio
+async def test_create_todo(client, token, mock_db_time):
     data = {'title': 'string', 'description': 'string', 'state': 'draft'}
-
-    response = client.post(
-        '/todos/', headers={'Authorization': f'Bearer {token}'}, json=data
-    )
+    with mock_db_time(model=Todo) as time:
+        response = client.post(
+            '/todos/', headers={'Authorization': f'Bearer {token}'}, json=data
+        )
     data['id'] = 1
+    data['created_at'] = time.isoformat()
+    data['updated_at'] = time.isoformat()
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == data
 
@@ -155,18 +158,22 @@ async def test_delete_todo_other_user(session, client, token, other_user):
 
 @pytest.mark.asyncio
 async def test_patch_todo(session, client, user, token):
-    todo = TodoFactory(user_id=user.id)
+    data = {'title': 'Novo', 'description': 'Nova Ordem', 'state': 'doing'}
 
+    todo = TodoFactory(user_id=user.id)
     session.add(todo)
     await session.commit()
+    await session.refresh(todo)
 
-    data = {'title': 'Novo', 'description': 'Nova Ordem', 'state': 'doing'}
     response = client.patch(
         f'/todos/{todo.id}',
         headers={'Authorization': f'Bearer {token}'},
         json=data,
     )
+
     data['id'] = todo.id
+    data['created_at'] = response.json()['created_at']
+    data['updated_at'] = response.json()['updated_at']
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == data
